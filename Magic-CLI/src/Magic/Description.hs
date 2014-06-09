@@ -272,3 +272,5 @@ describeChoice choice = case choice of
 
   ChoicePlayer pr -> "Player " <> sh pr
 
+  ChoicePile pile -> unlines $ "Pile: " : map describeObjectNameByRef pile
+

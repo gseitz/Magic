@@ -696,6 +696,7 @@ data Choice =
   | ChoiceCard SomeObjectRef
   | ChoiceText Text
   | ChoicePlayer PlayerRef
+  | ChoicePile [SomeObjectRef]
 
 data Question a where
   AskKeepHand              :: Question Bool
@@ -708,6 +709,7 @@ data Question a where
   AskAttackers             :: [ObjectRef TyPermanent] -> [EntityRef] -> Question [Attack]
   AskSearch                :: ZoneRef ty -> [Id] -> Question (Maybe Id)
   AskChoice                :: Maybe Text -> [(Choice, a)] -> Question a
+  AskPiles                 :: Int -> [SomeObjectRef] -> Question [[SomeObjectRef]]
 
 type Pick a = (a, [a])
 

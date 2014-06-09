@@ -16,6 +16,7 @@ import Control.Monad.Random (RandT, StdGen, evalRandT, newStdGen)
 import Control.Monad.Reader (runReader)
 import Control.Monad.State (evalStateT)
 import Data.Maybe (fromMaybe)
+import qualified Data.Map as M
 import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -93,6 +94,15 @@ askQuestions = eval . viewT
         choice <- offerOptions p (fromMaybe "Choose:" maybeQ) $
           [ (desc world (describeChoice ch), a) | (ch, a) <- choices ]
         askQuestions (k choice)
+      AskQuestion p world (AskPiles n cards) :>>= k -> do
+        let choosePile ref = offerOptions p ("Choose a pile for " <> desc world (describeObjectByRef ref)) [ (Text.pack $ show i, i) | i <- [1..n] ]
+            assignCard [] res = return $ M.elems res
+            assignCard (c:cs) res = do
+              i <- choosePile c
+              assignCard cs (M.insertWith (++) i [c] res)
+        piles <- assignCard cards $ M.fromList [(i, []) | i <- [1..n]]
+        askQuestions (k piles)
+
 
 declareAttackers :: PlayerRef -> World -> [ObjectRef TyPermanent] -> [EntityRef] -> IO [Attack]
 declareAttackers p world [] defs = return []
