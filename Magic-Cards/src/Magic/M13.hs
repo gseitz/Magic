@@ -682,6 +682,18 @@ elixirOfImmortality = mkCard $ do
         rs <- view $ allRefsInSomeZone (Some (Graveyard you))
         void $ shuffleIntoLibrary (rSelf : rs) [you]
 
+gildedLotus :: Card
+gildedLotus = mkCard $ do
+    name =: Just "Gilded Lotus"
+    types =: artifactType
+    play =: Just playObject { manaCost = Just $ replicate 5 Nothing }
+    activatedAbilities =: [addMana]
+  where
+    addMana = tapAbility $ \rSelf you -> do
+      col <- askColor you [White, Blue, Black, Red, Green]
+      mkTrigger you
+        will $ AddToManaPool you $ replicate 3 (Just col)
+
 tormod'sCrypt :: Card
 tormod'sCrypt = mkCard $ do
     name =: Just "Tormod's Crypt"

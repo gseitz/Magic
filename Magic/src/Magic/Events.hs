@@ -12,6 +12,7 @@ module Magic.Events (
     shuffleIntoLibrary,
     searchCard,
     askYesNo,
+    askColor,
 
     executeEffects, executeEffect, will,
     tick
@@ -98,6 +99,12 @@ askYesNo :: PlayerRef -> Text -> Magic Bool
 askYesNo p txt = askQuestion p (AskChoice (Just txt) choices)
   where
     choices = [(ChoiceYesNo True, True), (ChoiceYesNo False, False)]
+
+askColor :: PlayerRef -> [Color] -> Magic Color
+askColor p cs = askQuestion p (AskChoice Nothing choices)
+  where
+    choices = [ (ChoiceColor c, c) | c <- cs ]
+
 
 -- EXECUTING EFFECTS
 
