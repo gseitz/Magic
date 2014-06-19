@@ -682,6 +682,31 @@ elixirOfImmortality = mkCard $ do
         rs <- view $ allRefsInSomeZone (Some (Graveyard you))
         void $ shuffleIntoLibrary (rSelf : rs) [you]
 
+primalClay :: Card
+primalClay = mkCard $ do
+    name =: Just "Primal Clay"
+    types =: artifactType <> creatureTypes [Shapeshifter]
+    play =: Just playObject { manaCost = Just $ replicate 4 Nothing }
+    triggeredAbilities =: primalClayTrigger
+  where
+    primalClayTrigger :: TriggeredAbilities
+    primalClayTrigger = onSelfETB $ \(_, i) p -> mkTrigger p $ do
+      t <- tick
+      let choice1 = [SetPT (3, 3)]
+          choice2 = [SetPT (2, 2), AddStaticKeywordAbility Flying]
+          choice3 = [SetPT (1, 6), AddStaticKeywordAbility Defender, ChangeTypes (creatureTypes [Wall] <>)]
+          choices = [ (ChoiceText "3/3 artifact creature", choice1)
+                    , (ChoiceText "2/2 artifact creature with flying", choice2)
+                    , (ChoiceText "1/6 Wall artifact creature with defender", choice3)
+                    ]
+      choice <- askQuestion p (AskChoice Nothing choices)
+      will $
+        InstallLayeredEffect (Some Battlefield, i) TemporaryLayeredEffect
+          { temporaryTimestamp = t
+          , temporaryDuration  = Indefinitely
+          , temporaryEffect    = affectingSelf choice
+          }
+
 tormod'sCrypt :: Card
 tormod'sCrypt = mkCard $ do
     name =: Just "Tormod's Crypt"
