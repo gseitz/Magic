@@ -269,3 +269,6 @@ describeChoice choice = case choice of
   ChoiceCard someRef -> describeObjectNameByRef someRef
 
   ChoiceText txt -> text txt
+
+  ChoicePlayer pr -> "Player " <> sh pr
+

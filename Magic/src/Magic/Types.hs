@@ -695,6 +695,7 @@ data Choice =
   | ChoiceColor Color
   | ChoiceCard SomeObjectRef
   | ChoiceText Text
+  | ChoicePlayer PlayerRef
 
 data Question a where
   AskKeepHand              :: Question Bool

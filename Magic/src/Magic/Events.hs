@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Magic.Events (
     -- * Types
@@ -12,6 +13,7 @@ module Magic.Events (
     shuffleIntoLibrary,
     searchCard,
     askYesNo,
+    askChooseOpponent,
 
     executeEffects, executeEffect, will,
     tick
@@ -98,6 +100,15 @@ askYesNo :: PlayerRef -> Text -> Magic Bool
 askYesNo p txt = askQuestion p (AskChoice (Just txt) choices)
   where
     choices = [(ChoiceYesNo True, True), (ChoiceYesNo False, False)]
+
+askChooseOpponent :: PlayerRef -> Magic PlayerRef
+askChooseOpponent chooser = do
+    ps <- IdList.toList <$> view (asks players)
+    let opponents = [(ChoicePlayer p, p) | (p, _) <- ps, p /= chooser]
+    case opponents of
+        [(_, opp)] -> return opp
+        opps -> askQuestion chooser (AskChoice (Just "Choose an opponent:") opps)
+
 
 -- EXECUTING EFFECTS
 
