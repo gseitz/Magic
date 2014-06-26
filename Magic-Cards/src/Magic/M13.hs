@@ -2,6 +2,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DoAndIfThenElse #-}
+{-# LANGUAGE TupleSections #-}
 
 module Magic.M13 where
 
@@ -10,11 +11,13 @@ import Magic.BasicLands (tapToAddMana)
 import qualified Magic.IdList as IdList
 
 import Control.Applicative
+import Control.Arrow (first)
 import Control.Category ((.))
 import Control.Monad (void, when)
 import Data.Boolean (true, (&&*), (||*))
 import Data.Label (get)
 import Data.Label.Monadic ((=:), asks)
+import Data.Maybe (maybeToList)
 import Data.Monoid ((<>), mconcat)
 import qualified Data.Set as Set
 import Data.Text (Text)
@@ -418,6 +421,26 @@ mindSculpt = mkCard $ do
       stackTargetSelf rSelf you ps $ \p _ _ -> do
         cards <- IdList.toList <$> view (asks (library . player p))
         moveCards (take 7 cards) (Library p) (Graveyard p)
+
+sphinxOfUthuun :: Card
+sphinxOfUthuun = mkCard $ do
+    name =: Just "Sphinx of Uthuun"
+    types =: creatureTypes [Sphinx]
+    pt =: Just (5, 6)
+    play =: Just playObject { manaCost = Just $ [Nothing, Nothing] ++ replicate 5 (Just Blue) }
+    triggeredAbilities =: onSelfETB sphinxTrigger
+  where
+    sphinxTrigger _rSelf you = do
+      lib <- view (asks (library . player you))
+      let top5 = map ((Some (Library you),) . fst) $ take 5 (IdList.toList lib)
+      chosenOpp <- askChooseOpponent you
+      piles <- askQuestion chosenOpp (AskPiles 2 top5)
+      inHandIndex <- askQuestion you (AskChoice (Just "Choose pile to put in hand:") $ map (first ChoicePile) $ zip piles [0..])
+      let getCards refs = refs >>= (\sr@(_, i) -> map (sr,) $ maybeToList (IdList.get i lib))
+          toHand = getCards $ piles !! inHandIndex
+          toGraveyard = getCards $ piles !! abs (inHandIndex-1)
+          makeEffect targetZone (ref, obj) = WillMoveObject (Just ref) targetZone obj
+      void $ executeEffects $ map (makeEffect (Hand you)) toHand ++ map (makeEffect (Graveyard you)) toGraveyard
 
 tricksOfTheTrade :: Card
 tricksOfTheTrade = mkCard $ do
